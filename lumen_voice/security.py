@@ -5,14 +5,15 @@ import os
 from dotenv import load_dotenv
 
 
-load_dotenv()
+dotenv_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+load_dotenv(dotenv_path)
 # Configuração do Hashing de Senha
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Configuração do Token JWT
 # ESTA CHAVE DEVE ESTAR NUM ARQUIVO .env E NÃO NO CÓDIGO!
 # Gere uma chave forte com: openssl rand -hex 32
-SECRET_KEY = os.getenv("TOKEN") 
+SECRET_KEY = os.getenv("SECRET_KEY") 
 if SECRET_KEY is None:
     raise ValueError("A variável de ambiente SECRET_KEY não foi definida!")
 ALGORITHM = "HS256"

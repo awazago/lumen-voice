@@ -17,3 +17,6 @@ class ImageRequest(BaseModel):
     prompt: str
     negative_prompt: str = ""
     model: str = "core" # Permite ao usuário escolher entre 'core' e 'ultra'
+
+class TokenData(BaseModel):
+    email: str | None = None
