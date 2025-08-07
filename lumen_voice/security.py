@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 dotenv_path = os.path.join(os.path.dirname(__file__), '..', '.env')
 load_dotenv(dotenv_path)
 # Configuração do Hashing de Senha
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
 
 # Configuração do Token JWT
 # ESTA CHAVE DEVE ESTAR NUM ARQUIVO .env E NÃO NO CÓDIGO!
