@@ -1,10 +1,12 @@
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-
+import os
+from dotenv import load_dotenv
 import crud, models, schemas, security
 from database import SessionLocal, engine
 
+load_dotenv()
 # Cria as tabelas no banco de dados (apenas na primeira vez)
 models.Base.metadata.create_all(bind=engine)
 

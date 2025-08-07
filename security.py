@@ -1,20 +1,19 @@
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
-import os
 from dotenv import load_dotenv
+import os
 
 
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 # Configuração do Hashing de Senha
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 # Configuração do Token JWT
-# ESTA CHAVE DEVE ESTAR NUM ARQUIVO .env E NÃO NO CÓDIGO!
-# Gere uma chave forte com: openssl rand -hex 32
-SECRET_KEY = os.getenv("TOKEN") 
+SECRET_KEY = os.getenv("SECRET_KEY") 
 if SECRET_KEY is None:
-    raise ValueError("A variável de ambiente SECRET_KEY não foi definida!")
+    raise ValueError("FATAL ERROR: A variável de ambiente SECRET_KEY não foi encontrada.")
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
