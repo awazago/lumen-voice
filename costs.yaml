@@ -1,0 +1,7 @@
+image_generation:
+  core: 15
+  ultra: 25
+
+# No futuro, poderemos adicionar outros custos aqui
+# video_generation:
+#  default: 25

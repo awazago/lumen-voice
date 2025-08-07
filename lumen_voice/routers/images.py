@@ -1,13 +1,14 @@
 # lumen_voice/routers/images.py
 import os
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
-from .. import schemas
+from .. import schemas, crud
 from ..auth import get_current_user
 from ..database import get_db
 from ..services import image_generator
+from ..config import settings
 import requests
 
 router = APIRouter(
@@ -15,12 +16,28 @@ router = APIRouter(
     tags=["Images"]
 )
 
+# Mapeamento de custos dos modelos
+#MODEL_COSTS = {
+#    "core": 1,
+#    "ultra": 5 
+#}
+
 @router.post("/generate", summary="Generate a new image")
 def generate_image(
     request: schemas.ImageRequest, # Usaremos um schema para o corpo da requisição
     db: Session = Depends(get_db),
     current_user: schemas.User = Depends(get_current_user) # <-- A MÁGICA DA SEGURANÇA!
 ):
+    
+    cost =  settings.COST_CONFIG.get("image_generation", {}).get(request.model, 1)   # MODEL_COSTS.get(request.model, 1)
+    
+    if current_user.credits < cost:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail = f"Créditos insuficientes. Esta geração custa {cost} créditos e você tem {current_user.credits}."
+
+        )
+    
     """
     Gera uma nova imagem para o usuário autenticado.
     """
@@ -38,6 +55,9 @@ def generate_image(
                 status_code=400,
                 detail="A geração falhou porque o prompt foi classificado como inseguro."
             )
+        
+        new_balance = current_user.credits - cost
+        crud.update_user_credits(db, user_id=current_user.id, credits=new_balance)
 
         # Salva a imagem em um diretório específico do usuário
         output_dir = f"generated_images/user_{current_user.id}"

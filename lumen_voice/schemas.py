@@ -9,6 +9,7 @@ class UserCreate(BaseModel):
 class User(BaseModel):
     id: int
     email: str
+    credits: int
 
     class Config:
         from_attributes = True # Ajuda o Pydantic a converter o modelo do SQLAlchemy
