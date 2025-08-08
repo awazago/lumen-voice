@@ -8,3 +8,6 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String) # NUNCA guarde a senha em texto!
     credits = Column(Integer, default=10)
+
+    stripe_customer_id = Column(String, unique=True, index=True, nullable=True)
+    plan = Column(String, nullable=True, default="free") # ex: free, hobby, pro
