@@ -1,5 +1,5 @@
 image_generation:
-  core: 15
+  core: 1
   ultra: 25
 
 # No futuro, poderemos adicionar outros custos aqui

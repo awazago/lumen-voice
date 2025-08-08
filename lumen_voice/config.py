@@ -8,6 +8,10 @@ with open("costs.yaml", "r") as f:
 class Settings(BaseSettings):
     SECRET_KEY: str
     STABILITY_KEY: str
+    STRIPE_SECRET_KEY: str
+    STRIPE_WEBHOOK_SECRET: str
+    PRICE_ID_HOBBY: str
+    PRICE_ID_PRO: str
     
     # 3. Adicione os custos carregados às nossas configurações
     COST_CONFIG: dict = COSTS
