@@ -18,7 +18,7 @@ app = FastAPI(
 # 2. Defina as "origens" permitidas (de onde o nosso front-end virá)
 origins = [
     "http://localhost:3000", 
-    "https://lumen-voice-app.vercel.app/",# A nossa aplicação Next.js
+    "https://lumen-voice-app.vercel.app",# A nossa aplicação Next.js
 ]
 
 # 3. Adicione o middleware à sua aplicação
