@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from ..auth import get_current_user
 
 # Importações relativas, pois estamos dentro do mesmo pacote
 from .. import crud, schemas, security
@@ -33,4 +34,28 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
-# O endpoint de /users/me/ ficará aqui depois, quando implementarmos a proteção por token
+@router.get("/users/me", response_model=schemas.User, summary="Get current user details")
+def read_users_me(current_user: schemas.User = Depends(get_current_user)):
+    """
+    Retorna os detalhes do utilizador atualmente autenticado.
+    A dependência `get_current_user` faz toda a magia de verificar o token.
+    """
+    return current_user
+
+@router.put("/users/password", summary="Update user password")
+def update_password(
+    password_data: schemas.PasswordUpdate,
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(get_current_user)
+):
+    # Verifica se a senha atual está correta
+    if not security.verify_password(password_data.current_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Senha atual incorreta")
+    
+    # Cria o hash da nova senha
+    new_hashed_password = security.get_password_hash(password_data.new_password)
+    
+    # Atualiza no banco de dados
+    crud.update_user_password(db, user_id=current_user.id, new_hashed_password=new_hashed_password)
+    
+    return {"message": "Senha atualizada com sucesso"}

@@ -43,3 +43,11 @@ def add_user_credits_and_plan(db: Session, stripe_customer_id: str, credits_to_a
         db.commit()
         db.refresh(db_user)
     return db_user
+
+def update_user_password(db: Session, user_id: int, new_hashed_password: str):
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if db_user:
+        db_user.hashed_password = new_hashed_password
+        db.commit()
+        db.refresh(db_user)
+    return db_user
