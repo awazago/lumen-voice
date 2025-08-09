@@ -21,3 +21,7 @@ class ImageRequest(BaseModel):
 
 class TokenData(BaseModel):
     email: str | None = None
+
+class PasswordUpdate(BaseModel):
+    current_password: str
+    new_password: str

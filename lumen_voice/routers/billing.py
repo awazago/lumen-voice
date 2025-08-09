@@ -44,6 +44,9 @@ def create_checkout_session(
         )
         return {"sessionId": checkout_session.id, "url": checkout_session.url}
     except Exception as e:
+        print("================ ERRO DO STRIPE ================")
+        print(e)
+        print("==============================================")
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/webhook")
@@ -80,3 +83,24 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
             crud.add_user_credits_and_plan(db, stripe_customer_id=customer_id, credits_to_add=plan_credits, plan_name=plan_name)
 
     return {"status": "success"}
+
+@router.post("/create-portal-session", summary="Create a customer portal session")
+def create_portal_session(
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(get_current_user)
+):
+    stripe_customer_id = current_user.stripe_customer_id
+    if not stripe_customer_id:
+        raise HTTPException(status_code=400, detail="Utilizador não é um cliente Stripe.")
+
+    # A URL para onde o utilizador será redirecionado após sair do portal
+    return_url = "http://localhost:3000/" # Futuramente, será a nossa página /account
+
+    try:
+        portal_session = stripe.billing_portal.Session.create(
+            customer=stripe_customer_id,
+            return_url=return_url,
+        )
+        return {"url": portal_session.url}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
