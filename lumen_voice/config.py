@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     STRIPE_WEBHOOK_SECRET: str
     PRICE_ID_HOBBY: str
     PRICE_ID_PRO: str
+    DATABASE_URL: str 
     
     #GOOGLE_TRANSLATE_API_KEY: str
     GOOGLE_APPLICATION_CREDENTIALS: str
