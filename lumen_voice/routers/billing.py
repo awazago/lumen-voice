@@ -49,11 +49,15 @@ def create_checkout_session(
         print("==============================================")
         raise HTTPException(status_code=400, detail=str(e))
 
+# lumen_voice/routers/billing.py
+
 @router.post("/webhook")
 async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     payload = await request.body()
     sig_header = request.headers.get('stripe-signature')
     event = None
+
+    print(f"--- WEBHOOK: A verificar assinatura com o segredo que termina em: '...{settings.STRIPE_WEBHOOK_SECRET[-6:]}' ---")
 
     try:
         event = stripe.Webhook.construct_event(
@@ -64,23 +68,46 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     except stripe.error.SignatureVerificationError as e:
         raise HTTPException(status_code=400, detail="Invalid signature")
 
-    # Lida com o evento
-    if event['type'] == 'invoice.paid':
-        invoice = event['data']['object']
-        customer_id = invoice['customer']
-        price_id = invoice['lines']['data'][0]['price']['id']
-        
-        plan_credits = 0
-        plan_name = "free"
-        if price_id == settings.PRICE_ID_HOBBY:
-            plan_credits = 200
-            plan_name = "hobby"
-        elif price_id == settings.PRICE_ID_PRO:
-            plan_credits = 600
-            plan_name = "pro"
+    # ▼▼▼ LÓGICA ATUALIZADA E MAIS ROBUSTA ▼▼▼
+    
+    # Lida com o evento de checkout bem-sucedido
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        customer_id = session.get('customer')
+        subscription_id = session.get('subscription')
 
-        if plan_credits > 0:
-            crud.add_user_credits_and_plan(db, stripe_customer_id=customer_id, credits_to_add=plan_credits, plan_name=plan_name)
+        # Verificação de segurança
+        if not customer_id or not subscription_id:
+            print("Webhook de checkout.session.completed sem customer_id ou subscription_id.")
+            return {"status": "ignored"}
+
+        # Busca a assinatura para obter o price_id de forma segura
+        try:
+            subscription = stripe.Subscription.retrieve(subscription_id)
+            price_id = subscription['items']['data'][0]['price']['id']
+            
+            plan_credits = 0
+            plan_name = "free"
+            if price_id == settings.PRICE_ID_HOBBY:
+                plan_credits = 200
+                plan_name = "hobby"
+            elif price_id == settings.PRICE_ID_PRO:
+                plan_credits = 600
+                plan_name = "pro"
+
+            if plan_credits > 0:
+                crud.add_user_credits_and_plan(db, stripe_customer_id=customer_id, credits_to_add=plan_credits, plan_name=plan_name)
+        
+        except Exception as e:
+            print(f"!!!!!! ERRO AO PROCESSAR ASSINATURA: {e} !!!!!!")
+            # Aqui podemos enviar um email de alerta para nós mesmos no futuro
+            return {"status": "error"}
+
+    # Opcional: Lidar com renovações futuras
+    elif event['type'] == 'invoice.paid':
+        # No futuro, podemos adicionar lógica aqui para renovar os créditos
+        # a cada mês que uma fatura é paga.
+        print("Webhook 'invoice.paid' recebido, ignorando por enquanto.")
 
     return {"status": "success"}
 

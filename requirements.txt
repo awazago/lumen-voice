@@ -34,6 +34,7 @@ MarkupSafe==3.0.2
 mdurl==0.1.2
 orjson==3.11.1
 passlib==1.7.4
+pillow==11.3.0
 proto-plus==1.26.1
 protobuf==6.31.1
 psycopg2-binary==2.9.10
