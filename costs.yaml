@@ -1,6 +1,6 @@
 image_generation:
-  core: 1
-  ultra: 25
+  core: 2
+  ultra: 5
 
 # No futuro, poderemos adicionar outros custos aqui
 # video_generation:

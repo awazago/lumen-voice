@@ -10,17 +10,12 @@ from ..database import get_db
 from ..services import image_generator
 from ..config import settings
 import requests
+from ..services import watermark
 
 router = APIRouter(
     prefix="/images", # Adiciona /images antes de todas as rotas aqui
     tags=["Images"]
 )
-
-# Mapeamento de custos dos modelos
-#MODEL_COSTS = {
-#    "core": 1,
-#    "ultra": 5 
-#}
 
 @router.post("/generate", summary="Generate a new image")
 def generate_image(
@@ -38,11 +33,6 @@ def generate_image(
 
         )
     
-    """
-    Gera uma nova imagem para o usuário autenticado.
-    """
-    # Futuramente, aqui virá a lógica de verificação de créditos do `current_user`
-
     try:
         image_content, finish_reason = image_generator.generate_stability_image(
             prompt=request.prompt,
@@ -55,6 +45,10 @@ def generate_image(
                 status_code=400,
                 detail="A geração falhou porque o prompt foi classificado como inseguro."
             )
+        
+        if current_user.plan == 'free':
+            print("--- INFO: Utilizador gratuito, a adicionar marca d'água. ---")
+            image_content = watermark.add_watermark(image_content)
         
         new_balance = current_user.credits - cost
         crud.update_user_credits(db, user_id=current_user.id, credits=new_balance)
@@ -69,10 +63,13 @@ def generate_image(
         with open(file_path, "wb") as f:
             f.write(image_content)
 
-        # Futuramente, salvaremos o `file_path` no banco de dados, associado ao usuário.
-
+        # Retorna a imagem diretamente como um ficheiro para o navegador/cliente
+        response = FileResponse(file_path, media_type="image/png")
+        # Adiciona um cabeçalho para o frontend saber o novo saldo de créditos
+        response.headers["X-Credits-Remaining"] = str(new_balance)
+        return response
         # Retorna a imagem diretamente como um arquivo para o navegador/cliente
-        return FileResponse(file_path, media_type="image/png")
+        #return FileResponse(file_path, media_type="image/png")
 
     except requests.exceptions.HTTPError as e:
         raise HTTPException(
